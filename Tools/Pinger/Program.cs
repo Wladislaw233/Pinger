@@ -16,7 +16,7 @@ internal static class Program
                 rollingInterval: RollingInterval.Day)
             .CreateLogger();
 
-        var host = CreateHostBuilder(args).Build();
+        using var host = CreateHostBuilder(args).Build();
 
         using (var serviceScope = host.Services.CreateScope())
         {
