@@ -1,0 +1,1 @@
+{"Http":{"Url":"https://www.google.com","StatusCode":200},"Icmp":{"Host":"google.com","Timeout":10},"Tcp":{"Host":"google.com","Port":80,"Timeout":10}}
