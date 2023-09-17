@@ -12,7 +12,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Models", "Application\Model
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UnitTests", "UnitTests", "{DCB2DC36-C40A-4E8B-B31B-DE579B116EB8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PingService.Tests", "UnitTests\PingService.Tests\PingService.Tests.csproj", "{66A2D9B9-CBE8-44ED-A7FD-9C8C3C322235}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pinger.Tests", "UnitTests\Pinger.Tests\Pinger.Tests.csproj", "{66A2D9B9-CBE8-44ED-A7FD-9C8C3C322235}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

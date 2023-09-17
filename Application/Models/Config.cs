@@ -1,4 +1,6 @@
-﻿namespace Models;
+﻿using Models.ProtocolConfigs;
+
+namespace Models;
 
 public class Config
 {

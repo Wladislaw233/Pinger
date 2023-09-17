@@ -26,7 +26,7 @@ internal static class Program
 
             var pingService = services.GetRequiredService<IPingService>();
             
-            await pingService.StartPingTests();
+            await pingService.StartPingersTests();
         }
         
         await host.RunAsync();
@@ -37,13 +37,13 @@ internal static class Program
         return Host.CreateDefaultBuilder(args)
             .ConfigureServices((_, services) =>
             {
-                services.AddSingleton<IConfigService>(_ =>
+                services.AddSingleton<ILogger>(_ => Log.Logger);
+                services.AddTransient<IConfigService>(_ =>
                 {
                     const string configFileName = "configuration.json";
 
                     return new ConfigService(AppDomain.CurrentDomain.BaseDirectory, configFileName);
                 });
-                services.AddSingleton<ILogger>(_ => Log.Logger);
                 services.AddTransient<IPingService, PingService>();
             });
     }

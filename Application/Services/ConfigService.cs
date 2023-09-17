@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Models;
+using Models.ProtocolConfigs;
 using Newtonsoft.Json;
 using Services.Interfaces;
 
