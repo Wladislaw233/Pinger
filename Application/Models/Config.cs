@@ -2,7 +2,7 @@
 
 public class Config
 {
-    public HttpConfig Http { get; set; }
-    public IcmpConfig Icmp { get; set; }
-    public TcpConfig Tcp { get; set; }
+    public IEnumerable<HttpConfig> HttpConfigs { get; set; }
+    public IEnumerable<IcmpConfig> IcmpConfigs { get; set; }
+    public IEnumerable<TcpConfig> TcpConfigs { get; set; }
 }

@@ -1,7 +1,6 @@
 ﻿namespace Models;
 
-public class IcmpConfig
+public class IcmpConfig : ProtocolConfig
 {
-    public string Host { get; set; }
     public int Timeout { get; set; }
 }

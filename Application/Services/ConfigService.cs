@@ -14,7 +14,7 @@ public class ConfigService : IConfigService
     {
         _configPath = configPath ??
                       throw new ArgumentException("The configuration file folder is incorrect.", nameof(configPath));
-        
+
         _configFullPath = Path.Combine(configPath, configFileName ??
                                                    throw new ArgumentException("The file name is incorrect.",
                                                        nameof(configFileName)));
@@ -23,7 +23,8 @@ public class ConfigService : IConfigService
     public Config GetConfig()
     {
         var directoryInfo = new DirectoryInfo(_configPath);
-        if (directoryInfo.Exists || File.Exists(_configFullPath))
+
+        if (!directoryInfo.Exists || !File.Exists(_configFullPath))
             return CreateDefaultConfigFile();
 
         using var fileStream = new FileStream(_configFullPath, FileMode.Open);
@@ -60,30 +61,59 @@ public class ConfigService : IConfigService
 
     private static Config CreateDefaultConfigObject()
     {
-        var httpConfig = new HttpConfig
+        var httpConfigs = new List<HttpConfig>
         {
-            Url = "https://www.google.com",
-            StatusCode = 200
+            new()
+            {
+                HostUrl = "https://www.google.com",
+                StatusCode = 200,
+                Period = 60000
+            },
+            new()
+            {
+                HostUrl = "https://www.yandex.ru",
+                StatusCode = 200,
+                Period = 10000
+            }
         };
 
-        var icmpConfig = new IcmpConfig
+        var icmpConfigs = new List<IcmpConfig>
         {
-            Host = "google.com",
-            Timeout = 10
+            new()
+            {
+                HostUrl = "google.com",
+                Period = 15000,
+                Timeout = 10
+            },
+            new()
+            {
+                HostUrl = "yandex.ru",
+                Period = 20000,
+                Timeout = 10
+            }
         };
 
-        var tcpConfig = new TcpConfig
+        var tcpConfigs = new List<TcpConfig>
         {
-            Host = "google.com",
-            Port = 80,
-            Timeout = 10
+            new()
+            {
+                HostUrl = "google.com",
+                Period = 30000,
+                Port = 80
+            },
+            new()
+            {
+                HostUrl = "yandex.ru",
+                Period = 45000,
+                Port = 80
+            }
         };
 
         var config = new Config
         {
-            Http = httpConfig,
-            Icmp = icmpConfig,
-            Tcp = tcpConfig
+            HttpConfigs = httpConfigs,
+            IcmpConfigs = icmpConfigs,
+            TcpConfigs = tcpConfigs
         };
 
         return config;

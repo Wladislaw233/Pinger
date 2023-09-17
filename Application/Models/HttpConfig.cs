@@ -1,7 +1,6 @@
 ﻿namespace Models;
 
-public class HttpConfig
+public class HttpConfig : ProtocolConfig
 {
-    public string Url { get; set; }
     public int StatusCode { get; set; }
 }

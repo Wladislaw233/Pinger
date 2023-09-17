@@ -10,6 +10,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Services", "Application\Ser
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Models", "Application\Models\Models.csproj", "{058E8775-AFA4-4420-8FDF-78FBCA0FBF33}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UnitTests", "UnitTests", "{DCB2DC36-C40A-4E8B-B31B-DE579B116EB8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PingService.Tests", "UnitTests\PingService.Tests\PingService.Tests.csproj", "{66A2D9B9-CBE8-44ED-A7FD-9C8C3C322235}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +23,7 @@ Global
 		{282B2D93-B978-4AB0-9AC6-E4487F341F39} = {AE2D3B0D-DA6E-4E30-A82F-DBEE5C49B79A}
 		{FBEA8ADA-293D-4728-8DAC-6DB33B4324C0} = {8AD76ABF-6981-4409-807F-67C789DCBBE0}
 		{058E8775-AFA4-4420-8FDF-78FBCA0FBF33} = {8AD76ABF-6981-4409-807F-67C789DCBBE0}
+		{66A2D9B9-CBE8-44ED-A7FD-9C8C3C322235} = {DCB2DC36-C40A-4E8B-B31B-DE579B116EB8}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{282B2D93-B978-4AB0-9AC6-E4487F341F39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -33,5 +38,9 @@ Global
 		{058E8775-AFA4-4420-8FDF-78FBCA0FBF33}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{058E8775-AFA4-4420-8FDF-78FBCA0FBF33}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{058E8775-AFA4-4420-8FDF-78FBCA0FBF33}.Release|Any CPU.Build.0 = Release|Any CPU
+		{66A2D9B9-CBE8-44ED-A7FD-9C8C3C322235}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{66A2D9B9-CBE8-44ED-A7FD-9C8C3C322235}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{66A2D9B9-CBE8-44ED-A7FD-9C8C3C322235}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{66A2D9B9-CBE8-44ED-A7FD-9C8C3C322235}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

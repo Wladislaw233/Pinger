@@ -1,8 +1,6 @@
 ﻿namespace Models;
 
-public class TcpConfig
+public class TcpConfig : ProtocolConfig
 {
-    public string Host { get; set; }
     public int Port { get; set; }
-    public int Timeout { get; set; }
 }

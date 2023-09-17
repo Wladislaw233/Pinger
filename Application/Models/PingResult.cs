@@ -2,12 +2,14 @@
 
 public class PingResult
 {
-    public DateTime DateTimeInspection = DateTime.Now;
-    public string Host { get; init; }
-    public string Status { get; init; }
+    private readonly DateTime _dateTimeInspection = DateTime.Now;
+    public string Protocol { get; init; }
+    public string HostUrl { get; init; }
+    public bool Status { get; init; }
 
     public override string ToString()
     {
-        return $"{DateTimeInspection:G} {Host} {Status}";
+        var status = Status ? "OK" : "FAILED";
+        return $"{Protocol} {_dateTimeInspection:G} {HostUrl} {status}";
     }
 }

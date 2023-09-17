@@ -3,6 +3,7 @@ using System.Net.Sockets;
 using Models;
 using Serilog;
 using Services.Interfaces;
+// ReSharper disable FunctionNeverReturns
 
 namespace Services;
 
@@ -20,71 +21,91 @@ public class PingService : IPingService
 
     public async Task StartPingTests()
     {
-        while (true)
+        _config ??= _configService.GetConfig();
+
+        var tasks = new List<Task>
         {
-            _config = _configService.GetConfig();
+            PingIcmp(),
+            PingHttp(),
+            PingTcp()
+        };
 
-            var icmpPingResult = await PingIcmp();
-
-            var httpPingResult = await PingHttp();
-            
-            var tcpPingResult = await PingTcp();
-            
-            _logger.Information(icmpPingResult.ToString());
-            
-            _logger.Information(httpPingResult.ToString());
-            
-            _logger.Information(tcpPingResult.ToString());
-            
-            await Task.Delay(60000);
-        }
+        await Task.WhenAll(tasks);
     }
 
-    private async Task<PingResult> PingIcmp()
+    public async Task PingIcmp()
     {
-        var ping = new Ping();
-        var reply = await ping.SendPingAsync(_config.Icmp.Host, _config.Icmp.Timeout);
+        _config ??= _configService.GetConfig();
 
-        return new PingResult()
-        {
-            Host = _config.Icmp.Host,
-            Status = reply.Status == IPStatus.Success ? "OK": "FAILED"
-        };
+        var tasks = _config.IcmpConfigs.Select(icmpConfig => Task.Run(async () =>
+            {
+                while (true)
+                {
+                    var ping = new Ping();
+                    var reply = await ping.SendPingAsync(icmpConfig.HostUrl, icmpConfig.Timeout);
+                    
+                    GenerateAndLogPingResult("ICMP", icmpConfig.HostUrl, reply.Status == IPStatus.Success);
+                    
+                    await Task.Delay(icmpConfig.Period);
+                }
+            }))
+            .ToList();
+
+        await Task.WhenAll(tasks);
     }
 
-    private async Task<PingResult> PingHttp()
+    public async Task PingHttp()
     {
-        using var httpClient = new HttpClient();
-        
-        var message = await httpClient.GetAsync(_config.Http.Url);
-        
-        return new PingResult()
-        {
-            Host = _config.Http.Url,
-            Status = (int)message.StatusCode == _config.Http.StatusCode ? "OK" : "FAILED"
-        };
+       _config ??= _configService.GetConfig();
+
+       var tasks = _config.HttpConfigs.Select(httpConfig => Task.Run(async () =>
+       {
+           while (true)
+           {
+               using (var httpClient = new HttpClient())
+               {
+                   var message = await httpClient.GetAsync(httpConfig.HostUrl);
+
+                   GenerateAndLogPingResult("HTTP", httpConfig.HostUrl,
+                       (int)message.StatusCode == httpConfig.StatusCode);
+               }
+               await Task.Delay(httpConfig.Period);
+           }
+       })).ToList();
+       
+       await Task.WhenAll(tasks);
     }
 
-    private async Task<PingResult> PingTcp()
+    public async Task PingTcp()
     {
-        using var tcpClient = new TcpClient();
-
-        var isConnected = false;
+        _config ??= _configService.GetConfig();
         
-        try
+        var tasks = _config.TcpConfigs.Select(tcpConfig => Task.Run(async () =>
         {
-            await tcpClient.ConnectAsync(_config.Tcp.Host, _config.Tcp.Port);
-            isConnected = true;
-        }
-        catch (Exception e)
-        {
-            // ignored
-        }
+            while (true)
+            {
+                using var tcpClient = new TcpClient();
+                {
+                    await tcpClient.ConnectAsync(tcpConfig.HostUrl, tcpConfig.Port);
 
-        return new PingResult()
+                    GenerateAndLogPingResult("TCP", tcpConfig.HostUrl, true);
+                }
+                await Task.Delay(tcpConfig.Period);
+            }
+        })).ToList();
+       
+        await Task.WhenAll(tasks);
+    }
+
+    private void GenerateAndLogPingResult(string protocol, string hostUrl, bool status)
+    {
+        var result = new PingResult()
         {
-            Host = $"{_config.Tcp.Host}:{_config.Tcp.Port}",
-            Status = isConnected ? "OK" : "FAILED"
+            Protocol = protocol,
+            HostUrl = hostUrl,
+            Status = status
         };
+        
+        _logger.Information(result.ToString());
     }
 }
