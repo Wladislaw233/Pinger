@@ -1,6 +1,6 @@
 ﻿using System.Net.NetworkInformation;
 using Models;
-using Models.ProtocolConfigs;
+using Models.ProtocolsConfig;
 using Services.Interfaces;
 
 namespace Services.Pingers;
@@ -18,14 +18,17 @@ public class IcmpPinger : IPinger
 
     public async Task<PingResult> Ping()
     {
-        var ping = new Ping();
+        using var ping = new Ping();
+        
         var reply = await ping.SendPingAsync(_icmpConfig.HostUrl, _icmpConfig.Timeout);
 
+        var status = reply.Status == IPStatus.Success;
+        
         return new PingResult()
         {
             HostUrl = _icmpConfig.HostUrl,
             Protocol = Protocol,
-            Status = reply.Status == IPStatus.Success
+            Status = status
         };
     }
 }

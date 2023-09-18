@@ -1,5 +1,5 @@
 ﻿using Models;
-using Models.ProtocolConfigs;
+using Models.ProtocolsConfig;
 using Services.Interfaces;
 
 namespace Services.Pingers;
@@ -21,11 +21,13 @@ public class HttpPinger : IPinger
         
         var message = await httpClient.GetAsync(_httpConfig.HostUrl);
 
+        var status = (int)message.StatusCode == _httpConfig.StatusCode;
+        
         return new PingResult()
         {
             HostUrl = _httpConfig.HostUrl,
             Protocol = Protocol,
-            Status = (int)message.StatusCode == 200
+            Status = status
         };
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System.Net.Sockets;
 using Models;
-using Models.ProtocolConfigs;
+using Models.ProtocolsConfig;
 using Services.Interfaces;
 
 namespace Services.Pingers;
@@ -18,16 +18,26 @@ public class TcpPinger : IPinger
 
     public async Task<PingResult> Ping()
     {
-        using var tcpClient = new TcpClient();
+        var status = false;
+
+        try
         {
+            using var tcpClient = new TcpClient();
+
             await tcpClient.ConnectAsync(_tcpConfig.HostUrl, _tcpConfig.Port);
 
-            return new PingResult()
-            {
-                HostUrl = $"{_tcpConfig.HostUrl}:{_tcpConfig.Port}",
-                Status = true,
-                Protocol = Protocol
-            };
+            status = true;
         }
+        catch (SocketException)
+        {
+            //ignored.
+        }
+
+        return new PingResult
+        {
+            HostUrl = $"{_tcpConfig.HostUrl}:{_tcpConfig.Port}",
+            Status = status,
+            Protocol = Protocol
+        };
     }
 }

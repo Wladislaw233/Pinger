@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using Models;
-using Models.ProtocolConfigs;
+using Models.ProtocolsConfig;
 using Newtonsoft.Json;
 using Services.Interfaces;
 
@@ -68,13 +68,13 @@ public class ConfigService : IConfigService
             {
                 HostUrl = "https://www.google.com",
                 StatusCode = 200,
-                Period = 60000
+                PingInterval = 60000
             },
             new()
             {
                 HostUrl = "https://www.yandex.ru",
                 StatusCode = 200,
-                Period = 10000
+                PingInterval = 10000
             }
         };
 
@@ -83,13 +83,13 @@ public class ConfigService : IConfigService
             new()
             {
                 HostUrl = "google.com",
-                Period = 15000,
+                PingInterval = 15000,
                 Timeout = 10
             },
             new()
             {
                 HostUrl = "yandex.ru",
-                Period = 20000,
+                PingInterval = 20000,
                 Timeout = 10
             }
         };
@@ -99,13 +99,13 @@ public class ConfigService : IConfigService
             new()
             {
                 HostUrl = "google.com",
-                Period = 30000,
-                Port = 80
+                PingInterval = 30000,
+                Port = 9100
             },
             new()
             {
                 HostUrl = "yandex.ru",
-                Period = 45000,
+                PingInterval = 45000,
                 Port = 80
             }
         };

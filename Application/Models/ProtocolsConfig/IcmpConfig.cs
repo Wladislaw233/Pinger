@@ -1,4 +1,4 @@
-﻿namespace Models.ProtocolConfigs;
+﻿namespace Models.ProtocolsConfig;
 
 public class IcmpConfig : ProtocolConfig
 {

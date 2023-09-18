@@ -1,4 +1,4 @@
-﻿using Models.ProtocolConfigs;
+﻿using Models.ProtocolsConfig;
 
 namespace Models;
 

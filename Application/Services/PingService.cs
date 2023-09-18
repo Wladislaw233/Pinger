@@ -45,7 +45,7 @@ public class PingService : IPingService
             while (true)
             {
                 await PingAndLogResult(httpPinger);
-                await Task.Delay(httpConfig.Period);
+                await Task.Delay(httpConfig.PingInterval);
             }
         })).ToList();
 
@@ -64,7 +64,7 @@ public class PingService : IPingService
                 while (true)
                 {
                     await PingAndLogResult(icmpPinger);
-                    await Task.Delay(icmpConfig.Period);
+                    await Task.Delay(icmpConfig.PingInterval);
                 }
             }))
             .ToList();
@@ -83,7 +83,7 @@ public class PingService : IPingService
             while (true)
             {
                 await PingAndLogResult(tcpPinger);
-                await Task.Delay(tcpConfig.Period);
+                await Task.Delay(tcpConfig.PingInterval);
             }
         })).ToList();
 
@@ -92,7 +92,15 @@ public class PingService : IPingService
 
     private async Task PingAndLogResult<T>(T pinger) where T : IPinger
     {
-        var pingResult = await pinger.Ping();
-        _logger.Information(pingResult.ToString());
+        try
+        {
+            var pingResult = await pinger.Ping();
+            _logger.Information(pingResult.ToString());
+        }
+        catch (Exception e)
+        {
+            _logger.Error(e, "Something went wrong.");
+            throw;
+        }
     }
 }
