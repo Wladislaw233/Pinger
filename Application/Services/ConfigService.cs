@@ -100,7 +100,7 @@ public class ConfigService : IConfigService
             {
                 HostUrl = "google.com",
                 PingInterval = 30000,
-                Port = 9100
+                Port = 80
             },
             new()
             {

@@ -38,7 +38,7 @@ public class PingService : IPingService
         if (_config == null)
             return;
 
-        var tasks = _config.HttpConfigs.Select(httpConfig => Task.Run(async () =>
+        var tasks = _config.HttpConfigs.Select(async httpConfig =>
         {
             var httpPinger = new HttpPinger(httpConfig);
 
@@ -47,7 +47,7 @@ public class PingService : IPingService
                 await PingAndLogResult(httpPinger);
                 await Task.Delay(httpConfig.PingInterval);
             }
-        })).ToList();
+        });
 
         await Task.WhenAll(tasks);
     }
@@ -57,17 +57,16 @@ public class PingService : IPingService
         if (_config == null)
             return;
 
-        var tasks = _config.IcmpConfigs.Select(icmpConfig => Task.Run(async () =>
-            {
-                var icmpPinger = new IcmpPinger(icmpConfig);
+        var tasks = _config.IcmpConfigs.Select(async icmpConfig =>
+        {
+            var icmpPinger = new IcmpPinger(icmpConfig);
 
-                while (true)
-                {
-                    await PingAndLogResult(icmpPinger);
-                    await Task.Delay(icmpConfig.PingInterval);
-                }
-            }))
-            .ToList();
+            while (true)
+            {
+                await PingAndLogResult(icmpPinger);
+                await Task.Delay(icmpConfig.PingInterval);
+            }
+        });
 
         await Task.WhenAll(tasks);
     }
@@ -77,7 +76,7 @@ public class PingService : IPingService
         if (_config == null)
             return;
 
-        var tasks = _config.TcpConfigs.Select(tcpConfig => Task.Run(async () =>
+        var tasks = _config.TcpConfigs.Select(async tcpConfig =>
         {
             var tcpPinger = new TcpPinger(tcpConfig);
             while (true)
@@ -85,7 +84,7 @@ public class PingService : IPingService
                 await PingAndLogResult(tcpPinger);
                 await Task.Delay(tcpConfig.PingInterval);
             }
-        })).ToList();
+        });
 
         await Task.WhenAll(tasks);
     }
