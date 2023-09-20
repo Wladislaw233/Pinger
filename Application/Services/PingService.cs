@@ -1,105 +1,81 @@
 ﻿using Models;
-using Serilog;
+using Models.ProtocolsConfig;
 using Services.Interfaces;
 using Services.Pingers;
-
-// ReSharper disable FunctionNeverReturns
 
 namespace Services;
 
 public class PingService : IPingService
 {
-    private readonly IConfigService _configService;
     private readonly ILogger _logger;
-    private Config? _config;
+    private readonly IEnumerable<IPinger> _pingers;
+    private readonly IConfigService _configService;
+    private readonly ICancellationTokenProvider _cancellationTokenProvider;
 
-    public PingService(IConfigService configService, ILogger logger)
+    public PingService(ILogger logger, IEnumerable<IPinger> pingers, IConfigService configService,
+        ICancellationTokenProvider cancellationTokenProvider)
     {
-        _configService = configService;
         _logger = logger;
+        _pingers = pingers;
+        _configService = configService;
+        _cancellationTokenProvider = cancellationTokenProvider;
     }
 
     public async Task StartPingersTests()
     {
-        _config = _configService.GetConfig();
-
-        var tasks = new List<Task>
+        foreach (var pinger in _pingers)
         {
-            PingHttp(),
-            PingIcmp(),
-            PingTcp()
-        };
-
-        await Task.WhenAll(tasks);
-    }
-
-    private async Task PingHttp()
-    {
-        if (_config == null)
-            return;
-
-        var tasks = _config.HttpConfigs.Select(async httpConfig =>
-        {
-            var httpPinger = new HttpPinger(httpConfig);
-
-            while (true)
+            var pingerTask = pinger switch
             {
-                await PingAndLogResult(httpPinger);
-                await Task.Delay(httpConfig.PingInterval);
-            }
-        });
+                HttpPinger => PingAndLogResult<HttpConfig>(pinger, "HttpConfig"),
+                IcmpPinger => PingAndLogResult<IcmpConfig>(pinger, "IcmpConfig"),
+                TcpPinger => PingAndLogResult<TcpConfig>(pinger, "TcpConfig"),
+                _ => null
+            };
 
-        await Task.WhenAll(tasks);
-    }
-
-    private async Task PingIcmp()
-    {
-        if (_config == null)
-            return;
-
-        var tasks = _config.IcmpConfigs.Select(async icmpConfig =>
-        {
-            var icmpPinger = new IcmpPinger(icmpConfig);
-
-            while (true)
+            if (pingerTask == null)
             {
-                await PingAndLogResult(icmpPinger);
-                await Task.Delay(icmpConfig.PingInterval);
+                await _logger.LogWarningAsync("Perhaps we forgot to connect one of the pinger in the PingerService service.");
             }
-        });
-
-        await Task.WhenAll(tasks);
+        }
+        
+        await Cancel();
     }
 
-    private async Task PingTcp()
-    {
-        if (_config == null)
-            return;
-
-        var tasks = _config.TcpConfigs.Select(async tcpConfig =>
-        {
-            var tcpPinger = new TcpPinger(tcpConfig);
-            while (true)
-            {
-                await PingAndLogResult(tcpPinger);
-                await Task.Delay(tcpConfig.PingInterval);
-            }
-        });
-
-        await Task.WhenAll(tasks);
-    }
-
-    private async Task PingAndLogResult<T>(T pinger) where T : IPinger
+    private async Task PingAndLogResult<T>(IPinger pinger, string configName) where T : ProtocolConfig
     {
         try
         {
-            var pingResult = await pinger.Ping();
-            _logger.Information(pingResult.ToString());
+            var config = _configService.GetConfig<T>(configName);
+
+            while (true)
+            {
+                _cancellationTokenProvider.Token.ThrowIfCancellationRequested();
+
+                pinger.SetConfig(config);
+
+                var pingResult = await pinger.Ping();
+
+                await _logger.LogInfoAsync(pingResult.ToString());
+
+                await Task.Delay(config.PingInterval);
+            }
         }
-        catch (Exception e)
+        catch (Exception exc)
         {
-            _logger.Error(e, "Something went wrong.");
-            throw;
+            await _logger.LogErrorAsync(exc.ToString());
+            _cancellationTokenProvider.Cancel();
         }
+    }
+
+    private async Task Cancel()
+    {
+        Console.WriteLine("Press any key for stop pingers.");
+
+        await Task.Run(() => Console.ReadKey(true));
+
+        Console.WriteLine("Pingers is shutting down...");
+
+        _cancellationTokenProvider.Cancel();
     }
 }

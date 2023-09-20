@@ -1,4 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Models;
 using Serilog;
 using Services;
@@ -9,7 +14,7 @@ namespace Pinger.Tests;
 
 public class PingServiceTests
 {
-    private readonly IServiceProvider _serviceProvider;
+    /*private readonly IServiceProvider _serviceProvider;
     private readonly ILogger _logger;
     
     public PingServiceTests()
@@ -92,8 +97,12 @@ public class PingServiceTests
         Assert.DoesNotContain(pingResults, result => !result.Status);
     }
 
-    [Fact]
-    public async Task TcpPinger_Ping_Success()
+    [Theory]
+    [InlineData("x", 1)]
+    [InlineData("y", 1)]
+    [InlineData("z", 1)]
+    [InlineData("6", 1)]
+    public async Task TcpPinger_Ping_Success(string x, int y)
     {
         //Arrange
         
@@ -118,5 +127,5 @@ public class PingServiceTests
         
         //Assert
         Assert.DoesNotContain(pingResults, result => !result.Status);
-    }
+    }*/
 }

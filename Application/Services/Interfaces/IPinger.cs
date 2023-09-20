@@ -4,6 +4,7 @@ namespace Services.Interfaces;
 
 public interface IPinger
 {
-    string Protocol { get; }
+    void SetConfig<T>(T config) where T : ProtocolConfig;
+    
     Task<PingResult> Ping();
 }

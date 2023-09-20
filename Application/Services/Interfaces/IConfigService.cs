@@ -4,5 +4,5 @@ namespace Services.Interfaces;
 
 public interface IConfigService
 {
-    Config GetConfig();
+    T GetConfig<T>(string configName) where T : ProtocolConfig;
 }

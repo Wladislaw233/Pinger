@@ -7,37 +7,30 @@ namespace Services.Pingers;
 
 public class TcpPinger : IPinger
 {
-    public string Protocol => "TCP";
-    
-    private readonly TcpConfig _tcpConfig;
+    private TcpConfig? _tcpConfig;
 
-    public TcpPinger(TcpConfig tcpConfig)
+    public void SetConfig<T>(T config) where T : ProtocolConfig
     {
-        _tcpConfig = tcpConfig;
+        if (config is TcpConfig tcpConfig)
+            _tcpConfig = tcpConfig;
+        else
+            throw new ArgumentException($"Parameter is not a type HttpConfig.", nameof(config));
     }
-
+    
     public async Task<PingResult> Ping()
     {
-        var status = false;
+        if (_tcpConfig == null)
+            throw new ArgumentNullException($"Tcp configuration not set - {nameof(_tcpConfig)}");
+        
+        using var tcpClient = new TcpClient();
 
-        try
-        {
-            using var tcpClient = new TcpClient();
-
-            await tcpClient.ConnectAsync(_tcpConfig.HostUrl, _tcpConfig.Port);
-
-            status = true;
-        }
-        catch (SocketException)
-        {
-            //ignored.
-        }
-
+        await tcpClient.ConnectAsync(_tcpConfig.HostUrl, _tcpConfig.Port);
+        
         return new PingResult
         {
             HostUrl = $"{_tcpConfig.HostUrl}:{_tcpConfig.Port}",
-            Status = status,
-            Protocol = Protocol
+            Protocol = "TCP",
+            Status = true
         };
     }
 }

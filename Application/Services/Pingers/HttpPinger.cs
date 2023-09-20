@@ -6,27 +6,33 @@ namespace Services.Pingers;
 
 public class HttpPinger : IPinger
 {
-    public string Protocol => "HTTP";
+    public string ConfigName => "HttpConfig";
     
-    private readonly HttpConfig _httpConfig;
+    private HttpConfig? _httpConfig;
 
-    public HttpPinger(HttpConfig httpConfigs)
+    public void SetConfig<T>(T config) where T : ProtocolConfig
     {
-        _httpConfig = httpConfigs;
+        if (config is HttpConfig httpConfig)
+            _httpConfig = httpConfig;
+        else
+            throw new ArgumentException($"Parameter is not a type HttpConfig.", nameof(config));
     }
     
     public async Task<PingResult> Ping()
     {
-        using var httpClient = new HttpClient(); 
+        if (_httpConfig == null)
+            throw new InvalidOperationException($"{nameof(_httpConfig)} is null.");
         
+        using var httpClient = new HttpClient();
+
         var message = await httpClient.GetAsync(_httpConfig.HostUrl);
 
         var status = (int)message.StatusCode == _httpConfig.StatusCode;
-        
+
         return new PingResult()
         {
             HostUrl = _httpConfig.HostUrl,
-            Protocol = Protocol,
+            Protocol = "HTTP",
             Status = status
         };
     }

@@ -7,17 +7,23 @@ namespace Services.Pingers;
 
 public class IcmpPinger : IPinger
 {
-    public string Protocol => "ICMP";
-
-    private readonly IcmpConfig _icmpConfig;
-
-    public IcmpPinger(IcmpConfig icmpConfig)
+    public string ConfigName => "IcmpConfig";
+    
+    private IcmpConfig? _icmpConfig;
+    
+    public void SetConfig<T>(T config) where T : ProtocolConfig
     {
-        _icmpConfig = icmpConfig;
+        if (config is IcmpConfig icmpConfig)
+            _icmpConfig = icmpConfig;
+        else
+            throw new ArgumentException($"Parameter is not a type HttpConfig.", nameof(config));
     }
-
+    
     public async Task<PingResult> Ping()
     {
+        if (_icmpConfig == null)
+            throw new InvalidOperationException($"{nameof(_icmpConfig)} is null.");
+        
         using var ping = new Ping();
         
         var reply = await ping.SendPingAsync(_icmpConfig.HostUrl, _icmpConfig.Timeout);
@@ -27,7 +33,7 @@ public class IcmpPinger : IPinger
         return new PingResult()
         {
             HostUrl = _icmpConfig.HostUrl,
-            Protocol = Protocol,
+            Protocol = "ICMP",
             Status = status
         };
     }
