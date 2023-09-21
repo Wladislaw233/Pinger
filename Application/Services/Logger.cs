@@ -34,16 +34,11 @@ public class Logger : ILogger
     {
         try
         {
-            var fileInfo = new FileInfo(_logFilePath);
-
-            if (!fileInfo.Exists)
-            {
-                fileInfo.Create();
-            }
-
             await _semaphoreSlim.WaitAsync().ConfigureAwait(false);
 
-            await using var streamWriter = File.AppendText(_logFilePath);
+            await using var fileStream = new FileStream(_logFilePath, FileMode.Append, FileAccess.Write, FileShare.Read);
+            
+            await using var streamWriter = new StreamWriter(fileStream);
 
             var logEntry = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} [{logLevel}] {message}";
 

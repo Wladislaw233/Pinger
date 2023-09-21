@@ -6,8 +6,6 @@ namespace Services.Pingers;
 
 public class HttpPinger : IPinger
 {
-    public string ConfigName => "HttpConfig";
-    
     private HttpConfig? _httpConfig;
 
     public void SetConfig<T>(T config) where T : ProtocolConfig

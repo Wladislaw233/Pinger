@@ -7,8 +7,6 @@ namespace Services.Pingers;
 
 public class IcmpPinger : IPinger
 {
-    public string ConfigName => "IcmpConfig";
-    
     private IcmpConfig? _icmpConfig;
     
     public void SetConfig<T>(T config) where T : ProtocolConfig
