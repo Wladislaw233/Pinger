@@ -1,5 +1,4 @@
-﻿using System;
-using Services.Interfaces;
+﻿using Services.Interfaces;
 
 namespace Services;
 
@@ -21,7 +20,7 @@ public class ExceptionHandler : IExceptionHandler
         else
             await _logger.LogErrorAsync($"Something went wrong. Non-Exception object: \n{e.ExceptionObject}");
         
-        if(!_cancellationTokenProvider.Token.IsCancellationRequested)
+        if(_cancellationTokenProvider is { IsDisposed: false, Token.IsCancellationRequested: false })
             _cancellationTokenProvider.Cancel();
     }
 }

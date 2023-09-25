@@ -6,6 +6,8 @@ public class CancellationTokenProvider : ICancellationTokenProvider
 {
     private readonly CancellationTokenSource  _cancellationTokenProvider = new();
 
+    public bool IsDisposed { get; set; } 
+    
     public CancellationToken Token => _cancellationTokenProvider.Token;
 
     public void Cancel()
@@ -15,6 +17,7 @@ public class CancellationTokenProvider : ICancellationTokenProvider
 
     public void Dispose()
     {
+        IsDisposed = true;
         _cancellationTokenProvider.Dispose();
     }
 }
