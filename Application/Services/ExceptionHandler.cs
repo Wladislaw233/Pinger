@@ -1,4 +1,5 @@
 ﻿using Services.Interfaces;
+using Services.Logger;
 
 namespace Services;
 
@@ -16,9 +17,9 @@ public class ExceptionHandler : IExceptionHandler
     public async Task UnhandledExceptionHandler(UnhandledExceptionEventArgs e)
     {
         if (e.ExceptionObject is Exception exception)
-            await _logger.LogErrorAsync($"Something went wrong. \n {exception}");
+            await _logger.LogAsync(LogLevel.Error,$"Something went wrong. \n {exception}");
         else
-            await _logger.LogErrorAsync($"Something went wrong. Non-Exception object: \n{e.ExceptionObject}");
+            await _logger.LogAsync(LogLevel.Error,$"Something went wrong. Non-Exception object: \n{e.ExceptionObject}");
         
         if(_cancellationTokenProvider is { IsDisposed: false, Token.IsCancellationRequested: false })
             _cancellationTokenProvider.Cancel();

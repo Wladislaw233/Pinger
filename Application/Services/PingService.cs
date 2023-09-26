@@ -1,71 +1,60 @@
 ﻿using Models;
-using Models.ProtocolsConfig;
 using Services.Interfaces;
-using Services.Pingers;
+using Services.Logger;
+
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
 namespace Services;
 
 public class PingService : IPingService
 {
     private readonly ILogger _logger;
-    private readonly IEnumerable<IPinger> _pingers;
-    private readonly IConfigService _configService;
     private readonly ICancellationTokenProvider _cancellationTokenProvider;
+    private readonly IPingerFactory _pingerFactory;
 
-    public PingService(ILogger logger, IEnumerable<IPinger> pingers, IConfigService configService,
-        ICancellationTokenProvider cancellationTokenProvider)
+    public PingService(ILogger logger, ICancellationTokenProvider cancellationTokenProvider,
+        IPingerFactory pingerFactory)
     {
         _logger = logger;
-        _pingers = pingers;
-        _configService = configService;
         _cancellationTokenProvider = cancellationTokenProvider;
+        _pingerFactory = pingerFactory;
     }
 
-    public async Task StartPingersTests()
+    public async Task StartPingers()
     {
-        foreach (var pinger in _pingers)
-        {
-            var pingerTask = pinger switch
-            {
-                HttpPinger => PingAndLogResult<HttpConfig>(pinger, "HttpConfig"),
-                IcmpPinger => PingAndLogResult<IcmpConfig>(pinger, "IcmpConfig"),
-                TcpPinger => PingAndLogResult<TcpConfig>(pinger, "TcpConfig"),
-                _ => null
-            };
+        var configPingers = _pingerFactory.GetConfigPingers();
 
-            if (pingerTask == null)
-            {
-                await _logger.LogWarningAsync("Perhaps we forgot to connect one of the pinger in the PingerService service.");
-            }
+        foreach (var configPinger in configPingers)
+        {
+            PingAndLogResult(configPinger.Key, configPinger.Value);
         }
-        
+
         await Cancel();
     }
 
-    private async Task PingAndLogResult<T>(IPinger pinger, string configName) where T : ProtocolConfig
+    private async Task PingAndLogResult(ProtocolConfig config, IPinger pinger)
     {
-        try
+        while (true)
         {
-            var config = _configService.GetConfig<T>(configName);
+            _cancellationTokenProvider.Token.ThrowIfCancellationRequested();
 
-            while (true)
+            PingResult pingResult;
+
+            try
             {
-                _cancellationTokenProvider.Token.ThrowIfCancellationRequested();
-
-                pinger.SetConfig(config);
-
-                var pingResult = await pinger.Ping();
-
-                await _logger.LogInfoAsync(pingResult.ToString());
-
-                await Task.Delay(config.PingInterval);
+                pingResult = await pinger.Ping();
             }
+            catch (Exception e)
+            {
+                await _logger.LogAsync(LogLevel.Error,$"Pinger: {pinger.GetType()}, {config}.\n{e}");
+                continue;
+            }
+
+            await _logger.LogAsync(LogLevel.Information,pingResult.ToString());
+
+            await Task.Delay(config.PingInterval);
         }
-        catch (Exception exc)
-        {
-            await _logger.LogErrorAsync(exc.ToString());
-            _cancellationTokenProvider.Cancel();
-        }
+        // ReSharper disable once FunctionNeverReturns
     }
 
     private async Task Cancel()

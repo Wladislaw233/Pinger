@@ -2,5 +2,5 @@
 
 public interface IPingService
 {
-    Task StartPingersTests();
+    Task StartPingers();
 }

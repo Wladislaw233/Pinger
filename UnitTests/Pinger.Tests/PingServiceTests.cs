@@ -4,6 +4,7 @@ using Models;
 using Models.ProtocolsConfig;
 using Services;
 using Services.Interfaces;
+using Services.Logger;
 using Services.Pingers;
 
 namespace Pinger.Tests;
@@ -56,7 +57,7 @@ public class PingServiceTests
     {
         //Arrange
         var configService = _serviceProvider.GetRequiredService<IConfigService>();
-        var config = configService.GetConfig<T>(configName);
+        var config = configService.GetConfigs<T>(configName);
         
         var pinger = _serviceProvider.GetRequiredService<IEnumerable<IPinger>>().FirstOrDefault(pinger => pinger.GetType() == pingerType);
         PingResult result = new();
@@ -64,7 +65,7 @@ public class PingServiceTests
         //Act
         if (pinger != null)
         {
-            pinger.SetConfig(config);
+            pinger.SetConfig(config.FirstOrDefault());
             result = await pinger.Ping();
             await _logger.LogInfoAsync(result.ToString());
         }

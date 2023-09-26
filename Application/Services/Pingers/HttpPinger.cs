@@ -7,7 +7,7 @@ namespace Services.Pingers;
 public class HttpPinger : IPinger
 {
     private HttpConfig? _httpConfig;
-
+    
     public void SetConfig<T>(T config) where T : ProtocolConfig
     {
         if (config is HttpConfig httpConfig)
