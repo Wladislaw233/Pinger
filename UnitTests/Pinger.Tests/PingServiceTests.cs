@@ -19,13 +19,19 @@ public class PingServiceTests
         
         var services = new ServiceCollection();
 
-        var configuration = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory())
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\.."))
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true).Build();
         
         services.AddSingleton<IConfiguration>(configuration);
-        services.AddSingleton<ILogger>(new Logger(Path.Combine(Directory.GetCurrentDirectory(), "test.ping.log")));
         services.AddScoped<IConfigService, ConfigService>();
+
+        ILoggerBuilder loggerBuilder = new LoggerBuilder();
+        loggerBuilder.LogToConsole();
+        loggerBuilder.LogToFile(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\.."), "ping.log");
+        var logger = loggerBuilder.Build();
         
+        services.AddSingleton<ILogger>(logger);
         services.AddTransient<IPinger, HttpPinger>();
         services.AddTransient<IPinger, TcpPinger>();
         services.AddTransient<IPinger, IcmpPinger>();
@@ -38,39 +44,43 @@ public class PingServiceTests
     [Fact]
     public async Task HttpPinger_Ping_Success()
     {
-        await PingerTest<HttpConfig>(typeof(HttpPinger), "HttpConfig");
+        await PingerTest<HttpConfig>(typeof(HttpPinger), "Http");
     }
     
     [Fact]
     public async Task TspPinger_Ping_Success()
     {
-        await PingerTest<TcpConfig>(typeof(TcpPinger), "TcpConfig");
+        await PingerTest<TcpConfig>(typeof(TcpPinger), "Tcp");
     }
     
     [Fact]
     public async Task IcmpPinger_Ping_Success()
     {
-        await PingerTest<IcmpConfig>(typeof(IcmpPinger), "IcmpConfig");
+        await PingerTest<IcmpConfig>(typeof(IcmpPinger), "Icmp");
     }
     
     private async Task PingerTest<T>(Type pingerType, string configName) where T : ProtocolConfig
     {
         //Arrange
         var configService = _serviceProvider.GetRequiredService<IConfigService>();
-        var config = configService.GetConfigs<T>(configName);
+        var configs = configService.GetConfigs<T>(configName);
         
         var pinger = _serviceProvider.GetRequiredService<IEnumerable<IPinger>>().FirstOrDefault(pinger => pinger.GetType() == pingerType);
-        PingResult result = new();
+        var pingResults = new List<PingResult>();
         
         //Act
         if (pinger != null)
         {
-            pinger.SetConfig(config.FirstOrDefault());
-            result = await pinger.Ping();
-            await _logger.LogInfoAsync(result.ToString());
+            foreach (var config in configs)
+            {
+                pinger.SetConfig(config);
+                var result = await pinger.Ping();
+                pingResults.Add(result);
+                await _logger.LogAsync(LogLevel.Information, result.ToString());
+            }
         }
         
         //Assert
-        Assert.True(pinger != null && result.Status);
+        Assert.True(pinger != null && pingResults.All(result => result.Status));
     }
 }

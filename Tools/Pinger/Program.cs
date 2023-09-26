@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Pinger.Extensions;
 using Services.Interfaces;
 using Services.Logger;
@@ -48,11 +47,11 @@ internal static class Program
             .UseLogger(builder =>
             {
                 builder.LogToConsole();
-                builder.LogToFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\.."), "ping.log");
+                builder.LogToFile(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\.."), "ping.log");
             })
             .ConfigureAppConfiguration(config =>
             {
-                config.SetBasePath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\.."))
+                config.SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\.."))
                     .AddJsonFile("appsettings.json", false, true);
             })
             .ConfigureServices((_, services) => { services.AddServices(); });
