@@ -16,7 +16,6 @@ public class PingServiceTests
     
     public PingServiceTests()
     {
-        
         var services = new ServiceCollection();
 
         var configuration = new ConfigurationBuilder()
