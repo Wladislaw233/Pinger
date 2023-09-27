@@ -2,59 +2,34 @@
 
 public class Logger : ILogger
 {
-    private readonly string _logFilePath;
-    
-    private readonly bool _logToConsole;
-    
-    private readonly bool _logToFile;
-    
     private readonly SemaphoreSlim _semaphoreSlim = new(1,1);
-    public Logger(string logFilePath, bool logToConsole, bool logToFile)
-    {
-        _logToConsole = logToConsole;
-        _logToFile = logToFile;
-        _logFilePath = logFilePath;
-    }
-
+    
+    public bool LoggingToConsole { get; set; }
+    
+    public bool LoggingToFile { get; set; }
+    
+    public string PathToFile { get; set; }
+    
     public async Task LogAsync(LogLevel logLevel, string message)
     {
-        var logMessage = GenerateLogMessage(message, logLevel);
-
-        if (_logToFile)
-        {
+        var logMessage = GenerateLogMessage(logLevel, message);
+        
+        if (LoggingToFile)
             await LogToFileAsync(logMessage);
-        }
-
-        if (_logToConsole)
-        {
-            LogToConsole(logMessage, logLevel);
-        }
+        
+        if (LoggingToConsole)
+            LogToConsole(logLevel, logMessage);
+            
+        await Task.Delay(100);
     }
 
-    private static string GenerateLogMessage(string message, LogLevel logLevel)
-    {
-        var logLevelReduction = GetLogLevelReduction(logLevel);
-        return $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} [{logLevelReduction}] {message}";
-    }
-
-    private static string GetLogLevelReduction(LogLevel logLevel)
-    {
-        return logLevel switch
-        {
-            LogLevel.Error => "ERR",
-            LogLevel.Information => "INF",
-            LogLevel.Warning => "WRG",
-            _ => "UNK"
-        };
-    }
-    
     private async Task LogToFileAsync(string logMessage)
     {
         try
         {
             await _semaphoreSlim.WaitAsync().ConfigureAwait(false);
 
-            await using var fileStream = new FileStream(_logFilePath, FileMode.Append, FileAccess.Write, FileShare.Read);
+            await using var fileStream = new FileStream(PathToFile, FileMode.Append, FileAccess.Write, FileShare.Read);
             
             await using var streamWriter = new StreamWriter(fileStream);
             
@@ -70,8 +45,8 @@ public class Logger : ILogger
             _semaphoreSlim.Release();
         }
     }
-
-    private void LogToConsole(string logMessage, LogLevel logLevel)
+    
+    private void LogToConsole(LogLevel logLevel, string logMessage)
     {
         Console.ForegroundColor = logLevel switch
         {
@@ -83,5 +58,18 @@ public class Logger : ILogger
         Console.WriteLine(logMessage);
         
         Console.ResetColor();
+    }
+    
+    private static string GenerateLogMessage(LogLevel logLevel, string message)
+    {
+        var logLevelReduction =  logLevel switch
+        {
+            LogLevel.Error => "ERR",
+            LogLevel.Information => "INF",
+            LogLevel.Warning => "WRG",
+            _ => "UNK"
+        };
+        
+        return $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} [{logLevelReduction}] {message}";
     }
 }

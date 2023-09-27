@@ -2,49 +2,85 @@
 
 public class LoggerBuilder : ILoggerBuilder
 {
-    private string _logFilePath = AppDomain.CurrentDomain.BaseDirectory;
-    
-    private string _logFileName = "logs.log";
-    
-    private bool _logToConsole;
+    private Logger _logger = new();
 
-    private bool _logToFile;
-    
-    public void LogToConsole()
-    {
-        _logToConsole = true;
-    }
+    private const string FileName = "logs.log";
 
-    public void LogToFile()
+    private readonly string _filePath = Directory.GetCurrentDirectory();
+    
+    public ILoggerBuilder LogToConsole()
     {
-        _logToFile = true;
+        _logger.LoggingToConsole = true;
+        
+        return this;
     }
     
-    public void LogToFile(string logFilePath)
+    public ILoggerBuilder LogToFile()
     {
-        if (string.IsNullOrWhiteSpace(logFilePath))
-            throw new ArgumentNullException(nameof(logFilePath));
+        _logger.LoggingToFile = true;
+
+        _logger.PathToFile = Path.Combine(_filePath, FileName);
         
-        _logToFile = true;
+        return this;
+    }
+    
+    public ILoggerBuilder LogToFile(string filePath)
+    {
+        ValidateFilePath(filePath);
         
-        _logFilePath = logFilePath;
+        _logger.LoggingToFile = true;
+
+        _logger.PathToFile = Path.Combine(filePath, FileName);
+        
+        return this;
     }
 
-    public void LogToFile(string logFilePath, string logFileName)
+    public ILoggerBuilder LogToFile(string filePath, string fileName)
     {
-        if (string.IsNullOrWhiteSpace(logFilePath))
-            throw new ArgumentNullException(logFilePath);
+        ValidateFilePath(filePath);
+        ValidateFileName(fileName);
         
-        if (string.IsNullOrWhiteSpace(logFileName))
-            throw new ArgumentNullException(nameof(logFileName));
+        _logger.LoggingToFile = true;
+
+        _logger.PathToFile = Path.Combine(filePath, fileName);
         
-        _logToFile = true;
-        _logFilePath = logFilePath;
-        _logFileName = logFileName;
+        return this;
+    }
+
+    private static void ValidateFilePath(string filePath)
+    {
+        if (string.IsNullOrEmpty(filePath) || filePath.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
+        {
+            throw new ArgumentException("Invalid directory path.");
+        }
+        
+        if (!Directory.Exists(filePath))
+        {
+            throw new DirectoryNotFoundException("The file path does not exist.");
+        }
+    }
+
+    private static void ValidateFileName(string fileName)
+    {
+        if (string.IsNullOrEmpty(fileName) || fileName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+        {
+            throw new ArgumentException("Invalid file name.");
+        }
+
+        var fileExtension = Path.GetExtension(fileName);
+        
+        if (string.IsNullOrEmpty(fileExtension))
+        {
+            throw new ArgumentException("Invalid file extension.");
+        }
     }
 
     public Logger Build()
     {
-        return new Logger(Path.Combine(_logFilePath, _logFileName), _logToConsole, _logToFile);
+        var logger = _logger;
+
+        _logger = new Logger();
+
+        return logger;
     }
 }

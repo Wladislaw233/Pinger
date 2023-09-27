@@ -20,19 +20,19 @@ internal static class Program
         var services = serviceScope.ServiceProvider;
 
         var exceptionHandlerService = services.GetRequiredService<IExceptionHandler>();
-        
+
         AppDomain.CurrentDomain.UnhandledException += ExceptionHandler;
 
         var cancellationTokenProvider = services.GetRequiredService<ICancellationTokenProvider>();
 
         var token = cancellationTokenProvider.Token;
-        
+
         host.RunAsync(token);
-        
+
         var pingService = services.GetRequiredService<IPingService>();
-        
+
         await pingService.StartPingers();
-        
+
         return;
 
         async void ExceptionHandler(object sender, UnhandledExceptionEventArgs e)
@@ -46,8 +46,8 @@ internal static class Program
         return Host.CreateDefaultBuilder(args)
             .UseLogger(builder =>
             {
-                builder.LogToConsole();
-                builder.LogToFile(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\.."), "ping.log");
+                builder.LogToConsole()
+                    .LogToFile(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\.."), "ping.log");
             })
             .ConfigureAppConfiguration(config =>
             {
