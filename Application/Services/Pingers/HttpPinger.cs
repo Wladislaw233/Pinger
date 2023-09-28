@@ -8,12 +8,14 @@ public class HttpPinger : IPinger
 {
     private HttpConfig? _httpConfig;
     
-    public void SetConfig<T>(T config) where T : ProtocolConfig
+    public IPinger SetConfig<T>(T config) where T : ProtocolConfig
     {
         if (config is HttpConfig httpConfig)
             _httpConfig = httpConfig;
         else
             throw new ArgumentException($"Parameter is not a type HttpConfig.", nameof(config));
+
+        return this;
     }
     
     public async Task<PingResult> Ping()

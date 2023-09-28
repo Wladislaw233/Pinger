@@ -33,5 +33,5 @@ public interface ILoggerBuilder
     /// Returns the finished logger.
     /// </summary>
     /// <returns>Logger</returns>
-    Logger Build();
+    IEnumerable<ILoggerProvider> Build();
 }

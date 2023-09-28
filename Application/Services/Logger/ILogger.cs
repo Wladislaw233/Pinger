@@ -1,7 +1,7 @@
 ﻿namespace Services.Logger
 
 {
-    public interface ILogger
+    public interface ILogger : IAsyncDisposable
     {
         /// <summary>
         /// Logs the message with the dedicated logging level.

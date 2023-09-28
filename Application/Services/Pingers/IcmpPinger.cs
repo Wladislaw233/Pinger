@@ -9,12 +9,14 @@ public class IcmpPinger : IPinger
 {
     private IcmpConfig? _icmpConfig;
     
-    public void SetConfig<T>(T config) where T : ProtocolConfig
+    public IPinger SetConfig<T>(T config) where T : ProtocolConfig
     {
         if (config is IcmpConfig icmpConfig)
             _icmpConfig = icmpConfig;
         else
             throw new ArgumentException($"Parameter is not a type HttpConfig.", nameof(config));
+
+        return this;
     }
     
     public async Task<PingResult> Ping()

@@ -2,24 +2,26 @@
 
 public class LoggerBuilder : ILoggerBuilder
 {
-    private Logger _logger = new();
-
+    private ILoggerProvider? _fileLogger;
+    
+    private ILoggerProvider? _consoleLogger;
+    
     private const string FileName = "logs.log";
 
     private readonly string _filePath = Directory.GetCurrentDirectory();
     
     public ILoggerBuilder LogToConsole()
     {
-        _logger.LoggingToConsole = true;
+        _consoleLogger = new LoggerConsoleProvider();
         
         return this;
     }
     
     public ILoggerBuilder LogToFile()
     {
-        _logger.LoggingToFile = true;
-
-        _logger.PathToFile = Path.Combine(_filePath, FileName);
+        var pathToFile = Path.Combine(_filePath, FileName);
+        
+        _fileLogger = new LoggerFileProvider(pathToFile);
         
         return this;
     }
@@ -28,9 +30,9 @@ public class LoggerBuilder : ILoggerBuilder
     {
         ValidateFilePath(filePath);
         
-        _logger.LoggingToFile = true;
-
-        _logger.PathToFile = Path.Combine(filePath, FileName);
+        var pathToFile = Path.Combine(filePath, FileName);
+        
+        _fileLogger = new LoggerFileProvider(pathToFile);
         
         return this;
     }
@@ -40,9 +42,9 @@ public class LoggerBuilder : ILoggerBuilder
         ValidateFilePath(filePath);
         ValidateFileName(fileName);
         
-        _logger.LoggingToFile = true;
+        var pathToFile = Path.Combine(filePath, fileName);
 
-        _logger.PathToFile = Path.Combine(filePath, fileName);
+        _fileLogger = new LoggerFileProvider(pathToFile);
         
         return this;
     }
@@ -75,12 +77,24 @@ public class LoggerBuilder : ILoggerBuilder
         }
     }
 
-    public Logger Build()
+    public IEnumerable<ILoggerProvider> Build()
     {
-        var logger = _logger;
+        var loggers = new List<ILoggerProvider>();
+        
+        var consoleLogger = _consoleLogger;
+        
+        if(consoleLogger != null)
+            loggers.Add(consoleLogger);
 
-        _logger = new Logger();
+        _consoleLogger = null;
+        
+        var fileLogger = _fileLogger;
+        
+        if(fileLogger != null)
+            loggers.Add(fileLogger);
 
-        return logger;
+        _fileLogger = null;
+        
+        return loggers;
     }
 }

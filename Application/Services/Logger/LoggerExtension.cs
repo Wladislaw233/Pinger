@@ -9,9 +9,17 @@ public static class LoggerExtension
     {
         ILoggerBuilder builder = new LoggerBuilder();
         configureBuilder(builder);
-        var logger = builder.Build();
-
-        hostBuilder.ConfigureServices((_, services) => services.AddSingleton<ILogger>(logger));
+        var loggers = builder.Build();
+        
+        hostBuilder.ConfigureServices((_, services) =>
+        {
+            foreach (var logger in loggers)
+            {
+                services.AddSingleton(logger);
+            }
+            
+            services.AddSingleton<ILogger, Logger>();
+        });
 
         return hostBuilder;
     }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Services;
 using Services.Interfaces;
+using Services.Logger;
 
 namespace Pinger.Extensions;
 

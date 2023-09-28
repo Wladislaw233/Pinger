@@ -13,9 +13,9 @@ public class ConfigService : IConfigService
         _configuration = configuration;
     }
 
-    public List<T> GetConfigs<T>(string configName) where T : ProtocolConfig
+    public Configs GetConfigs()
     {
-        var configs = _configuration.GetSection(configName).Get<List<T>>();
-        return configs ?? throw new InvalidOperationException($"{typeof(T)} not found.");
+        var configs = _configuration.Get<Configs>();
+        return configs ?? throw new InvalidOperationException($"Configs not found.");
     }
 }

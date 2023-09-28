@@ -2,62 +2,21 @@
 
 public class Logger : ILogger
 {
-    private readonly SemaphoreSlim _semaphoreSlim = new(1,1);
-    
-    public bool LoggingToConsole { get; set; }
-    
-    public bool LoggingToFile { get; set; }
-    
-    public string PathToFile { get; set; }
+    private readonly IEnumerable<ILoggerProvider> _loggers;
+
+    public Logger(IEnumerable<ILoggerProvider> loggers)
+    {
+        _loggers = loggers;
+    }
     
     public async Task LogAsync(LogLevel logLevel, string message)
     {
         var logMessage = GenerateLogMessage(logLevel, message);
-        
-        if (LoggingToFile)
-            await LogToFileAsync(logMessage);
-        
-        if (LoggingToConsole)
-            LogToConsole(logLevel, logMessage);
-            
-        await Task.Delay(100);
-    }
 
-    private async Task LogToFileAsync(string logMessage)
-    {
-        try
+        foreach (var logger in _loggers)
         {
-            await _semaphoreSlim.WaitAsync().ConfigureAwait(false);
-
-            await using var fileStream = new FileStream(PathToFile, FileMode.Append, FileAccess.Write, FileShare.Read);
-            
-            await using var streamWriter = new StreamWriter(fileStream);
-            
-            await streamWriter.WriteLineAsync(logMessage).ConfigureAwait(false);
+            await logger.LogMessageAsync(logMessage);
         }
-        catch (Exception exc)
-        {
-            Console.WriteLine($"An error occurred while writing to the log. {exc}");
-            throw;
-        }
-        finally
-        {
-            _semaphoreSlim.Release();
-        }
-    }
-    
-    private void LogToConsole(LogLevel logLevel, string logMessage)
-    {
-        Console.ForegroundColor = logLevel switch
-        {
-            LogLevel.Error => ConsoleColor.Red,
-            LogLevel.Warning => ConsoleColor.Yellow,
-            _ => Console.ForegroundColor
-        };
-        
-        Console.WriteLine(logMessage);
-        
-        Console.ResetColor();
     }
     
     private static string GenerateLogMessage(LogLevel logLevel, string message)
@@ -71,5 +30,16 @@ public class Logger : ILogger
         };
         
         return $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} [{logLevelReduction}] {message}";
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        Console.WriteLine("Logger is disposed.");
+        var disposableLoggers = _loggers.Where(logger => logger is IAsyncDisposable);
+
+        foreach (var logger in disposableLoggers)
+        {
+            await (logger as IAsyncDisposable)!.DisposeAsync();
+        }
     }
 }

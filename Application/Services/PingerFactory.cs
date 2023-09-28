@@ -1,7 +1,5 @@
 ﻿using Models;
-using Models.ProtocolsConfig;
 using Services.Interfaces;
-using Services.Logger;
 using Services.Pingers;
 
 namespace Services;
@@ -9,70 +7,46 @@ namespace Services;
 public class PingerFactory : IPingerFactory
 {
     private readonly IConfigService _configService;
+    
+    private Configs? _configs;
 
-    private readonly ILogger _logger;
-
-    public PingerFactory(IConfigService configService, ILogger logger)
+    public PingerFactory(IConfigService configService)
     {
         _configService = configService;
-        _logger = logger;
     }
 
     public Dictionary<ProtocolConfig, IPinger> GetConfigPingers()
     {
+        _configs = _configService.GetConfigs();
+
         var configPingers = new Dictionary<ProtocolConfig, IPinger>();
-        
-        foreach (PingerEnum pingerEnum in Enum.GetValues(typeof(PingerEnum)))
-        {
-            var addedConfigPingers = pingerEnum switch
-            {
-                PingerEnum.Http => CreateConfigPingers<HttpConfig>("Http", pingerEnum),
-                PingerEnum.Icmp => CreateConfigPingers<IcmpConfig>("Icmp", pingerEnum),
-                PingerEnum.Tcp => CreateConfigPingers<TcpConfig>("Tcp", pingerEnum),
-                _ => null
-            };
 
-            if (addedConfigPingers != null)
-            {
-                configPingers = configPingers
-                    .Concat(addedConfigPingers)
-                    .ToDictionary(pair => pair.Key, pair => pair.Value);
-            }
-            else
-            {
-                _logger.LogAsync(LogLevel.Warning, "Perhaps you forgot to connect one of the pingers in the factory.");
-            }
-        }
-        
-        return configPingers;
+        return Enum.GetValues<PingerEnum>()
+            .Select(CreateConfigPingers)
+            .Aggregate(configPingers, (current, createdConfigPingers) => current.Concat(createdConfigPingers)
+                .ToDictionary(pair => pair.Key, pair => pair.Value));
     }
-    
-    private Dictionary<ProtocolConfig, IPinger> CreateConfigPingers<T>(string configName, PingerEnum pingerEnum) where T : ProtocolConfig
+
+    private Dictionary<ProtocolConfig, IPinger> CreateConfigPingers(PingerEnum pingerEnum)
     {
-        var configPingers = new Dictionary<ProtocolConfig, IPinger>();
+        if (_configs == null)
+            throw new ArgumentNullException(nameof(_configs), "Protocol configs is null.");
         
-        var configs = _configService.GetConfigs<T>(configName);
-
-        foreach (var config in configs)
+        var dictElements = pingerEnum switch
         {
-            var pinger = CreatePinger(pingerEnum);
-            
-            pinger.SetConfig(config);
-            
-            configPingers.Add(config, pinger);
-        }
+            PingerEnum.Tcp => _configs.Tcp.Select(config =>
+                new KeyValuePair<ProtocolConfig, IPinger>(config, new TcpPinger().SetConfig(config))),
 
-        return configPingers;
-    }
-    
-    private static IPinger CreatePinger(PingerEnum pingerEnum)
-    {
-        return pingerEnum switch
-        {
-            PingerEnum.Tcp => new TcpPinger(),
-            PingerEnum.Icmp => new IcmpPinger(),
-            PingerEnum.Http => new HttpPinger(),
-            _ => throw new ArgumentOutOfRangeException(nameof(pingerEnum))
+            PingerEnum.Icmp => _configs.Icmp.Select(config =>
+                new KeyValuePair<ProtocolConfig, IPinger>(config, new IcmpPinger().SetConfig(config))),
+
+            PingerEnum.Http => _configs.Http.Select(config =>
+                new KeyValuePair<ProtocolConfig, IPinger>(config, new HttpPinger().SetConfig(config))),
+
+            _ => throw new ArgumentOutOfRangeException(nameof(pingerEnum),
+                "Perhaps you forgot to connect one of the pingers in the factory.")
         };
+
+        return dictElements.ToDictionary(pair => pair.Key, pair => pair.Value);
     }
 }
