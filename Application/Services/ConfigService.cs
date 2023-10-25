@@ -13,9 +13,8 @@ public class ConfigService : IConfigService
         _configuration = configuration;
     }
 
-    public Configs GetConfigs()
+    public void SetConfigs(Configs configs)
     {
-        var configs = _configuration.Get<Configs>();
-        return configs ?? throw new InvalidOperationException($"Configs not found.");
+        _configuration.Bind(configs);
     }
 }

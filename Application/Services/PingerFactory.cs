@@ -1,4 +1,5 @@
-﻿using Models;
+﻿using System.Collections.ObjectModel;
+using Models;
 using Services.Interfaces;
 using Services.Pingers;
 
@@ -8,45 +9,25 @@ public class PingerFactory : IPingerFactory
 {
     private readonly IConfigService _configService;
     
-    private Configs? _configs;
+    private readonly Configs _configs = new();
+
+    private readonly List<IPinger> _pingers = new();
 
     public PingerFactory(IConfigService configService)
     {
         _configService = configService;
     }
 
-    public Dictionary<ProtocolConfig, IPinger> GetConfigPingers()
+    public IEnumerable<IPinger> GetPingers()
     {
-        _configs = _configService.GetConfigs();
+        _configService.SetConfigs(_configs);
 
-        var configPingers = new Dictionary<ProtocolConfig, IPinger>();
-
-        return Enum.GetValues<PingerEnum>()
-            .Select(CreateConfigPingers)
-            .Aggregate(configPingers, (current, createdConfigPingers) => current.Concat(createdConfigPingers)
-                .ToDictionary(pair => pair.Key, pair => pair.Value));
-    }
-
-    private Dictionary<ProtocolConfig, IPinger> CreateConfigPingers(PingerEnum pingerEnum)
-    {
-        if (_configs == null)
-            throw new ArgumentNullException(nameof(_configs), "Protocol configs is null.");
+        _pingers.AddRange(_configs.Tcp.Select(config => (IPinger)new TcpPinger(config)));
         
-        var dictElements = pingerEnum switch
-        {
-            PingerEnum.Tcp => _configs.Tcp.Select(config =>
-                new KeyValuePair<ProtocolConfig, IPinger>(config, new TcpPinger().SetConfig(config))),
+        _pingers.AddRange(_configs.Http.Select(config => (IPinger)new HttpPinger(config)));
+        
+        _pingers.AddRange(_configs.Icmp.Select(config => (IPinger)new IcmpPinger(config)));
 
-            PingerEnum.Icmp => _configs.Icmp.Select(config =>
-                new KeyValuePair<ProtocolConfig, IPinger>(config, new IcmpPinger().SetConfig(config))),
-
-            PingerEnum.Http => _configs.Http.Select(config =>
-                new KeyValuePair<ProtocolConfig, IPinger>(config, new HttpPinger().SetConfig(config))),
-
-            _ => throw new ArgumentOutOfRangeException(nameof(pingerEnum),
-                "Perhaps you forgot to connect one of the pingers in the factory.")
-        };
-
-        return dictElements.ToDictionary(pair => pair.Key, pair => pair.Value);
+        return _pingers;
     }
 }

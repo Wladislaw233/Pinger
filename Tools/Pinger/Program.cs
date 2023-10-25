@@ -20,25 +20,18 @@ internal static class Program
         var services = serviceScope.ServiceProvider;
 
         var exceptionHandlerService = services.GetRequiredService<IExceptionHandler>();
-
-        AppDomain.CurrentDomain.UnhandledException += ExceptionHandler;
-
-        var cancellationTokenProvider = services.GetRequiredService<ICancellationTokenProvider>();
-
-        var token = cancellationTokenProvider.Token;
-
-        host.RunAsync(token);
-
+        
+        // Add global exception handler.
+        AppDomain.CurrentDomain.UnhandledException += (_,e) => exceptionHandlerService.UnhandledExceptionHandler(e);
+        
         var pingService = services.GetRequiredService<IPingService>();
-
+        
+        // Running host and pingers.
+        host.RunAsync();
+        
         await pingService.StartPingers();
 
-        return;
-
-        async void ExceptionHandler(object sender, UnhandledExceptionEventArgs e)
-        {
-            await exceptionHandlerService.UnhandledExceptionHandler(e);
-        }
+        await host.StopAsync();
     }
 
     private static IHostBuilder CreateHostBuilder(string[] args)
@@ -54,6 +47,9 @@ internal static class Program
                 config.SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\.."))
                     .AddJsonFile("appsettings.json", false, true);
             })
-            .ConfigureServices((_, services) => { services.AddServices(); });
+            .ConfigureServices((_, services) =>
+            {
+                services.AddServices();
+            });
     }
 }

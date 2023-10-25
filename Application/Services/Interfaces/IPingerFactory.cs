@@ -1,8 +1,9 @@
-﻿using Models;
+﻿using System.Collections.ObjectModel;
+using Models;
 
 namespace Services.Interfaces;
 
 public interface IPingerFactory
 {
-    Dictionary<ProtocolConfig, IPinger> GetConfigPingers();
+    IEnumerable<IPinger> GetPingers();
 }

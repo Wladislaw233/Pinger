@@ -14,12 +14,12 @@ public class ExceptionHandler : IExceptionHandler
         _cancellationTokenProvider = cancellationTokenProvider;
     }
     
-    public async Task UnhandledExceptionHandler(UnhandledExceptionEventArgs e)
+    public void UnhandledExceptionHandler(UnhandledExceptionEventArgs e)
     {
         if (e.ExceptionObject is Exception exception)
-            await _logger.LogAsync(LogLevel.Error,$"Something went wrong. \n {exception}");
+            _logger.LogAsync(LogLevel.Error,$"Something went wrong. \n {exception}").GetAwaiter().GetResult();
         else
-            await _logger.LogAsync(LogLevel.Error,$"Something went wrong. Non-Exception object: \n{e.ExceptionObject}");
+            _logger.LogAsync(LogLevel.Error,$"Something went wrong. Non-Exception object: \n{e.ExceptionObject}").GetAwaiter().GetResult();
         
         if(_cancellationTokenProvider is { IsDisposed: false, Token.IsCancellationRequested: false })
             _cancellationTokenProvider.Cancel();

@@ -34,7 +34,6 @@ public class Logger : ILogger
 
     public async ValueTask DisposeAsync()
     {
-        Console.WriteLine("Logger is disposed.");
         var disposableLoggers = _loggers.Where(logger => logger is IAsyncDisposable);
 
         foreach (var logger in disposableLoggers)

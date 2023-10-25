@@ -2,5 +2,5 @@
 
 public interface IExceptionHandler
 {
-    Task UnhandledExceptionHandler(UnhandledExceptionEventArgs e);
+    void UnhandledExceptionHandler(UnhandledExceptionEventArgs e);
 }

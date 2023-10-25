@@ -1,8 +1,5 @@
-﻿using Models;
-using Services.Interfaces;
+﻿using Services.Interfaces;
 using Services.Logger;
-
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
 namespace Services;
 
@@ -22,39 +19,39 @@ public class PingService : IPingService
 
     public async Task StartPingers()
     {
-        var configPingers = _pingerFactory.GetConfigPingers();
+        var pingers = _pingerFactory.GetPingers();
 
-        foreach (var configPinger in configPingers)
-        {
-            PingAndLogResult(configPinger.Key, configPinger.Value);
-        }
+        var pingersTasks = pingers.Select(PingAndLogResult).ToList();
+        
+        Cancel();
 
-        await Cancel();
+        await Task.WhenAll(pingersTasks);
     }
 
-    private async Task PingAndLogResult(ProtocolConfig config, IPinger pinger)
+    private async Task PingAndLogResult(IPinger pinger)
     {
         while (true)
         {
-            _cancellationTokenProvider.Token.ThrowIfCancellationRequested();
-
-            PingResult pingResult;
-
+            if (_cancellationTokenProvider.Token.IsCancellationRequested)
+            {
+                Console.WriteLine($"Pinger with config {pinger.Config} is shutting down.");
+                break;
+            }
+            
             try
             {
-                pingResult = await pinger.Ping();
+                var pingResult = await pinger.Ping();
+                await _logger.LogAsync(LogLevel.Information,pingResult.ToString());
             }
             catch (Exception e)
             {
-                await _logger.LogAsync(LogLevel.Error,$"Pinger: {pinger.GetType()}, {config}.\n{e}");
-                continue;
+                await _logger.LogAsync(LogLevel.Error, $"Pinger: {pinger.GetType()}, {pinger.Config}.\n{e}");
             }
-
-            await _logger.LogAsync(LogLevel.Information,pingResult.ToString());
-
-            await Task.Delay(config.PingInterval);
+            finally
+            {
+                await Task.Delay(pinger.Config.PingInterval);
+            }
         }
-        // ReSharper disable once FunctionNeverReturns
     }
 
     private async Task Cancel()

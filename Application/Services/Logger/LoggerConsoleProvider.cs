@@ -2,9 +2,9 @@
 
 public class LoggerConsoleProvider : ILoggerProvider
 {
-    public async Task LogMessageAsync(string logMessage)
+    public Task LogMessageAsync(string logMessage)
     {
         Console.WriteLine(logMessage);
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 }

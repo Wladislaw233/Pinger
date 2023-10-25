@@ -62,7 +62,7 @@ public class PingServiceTests
     {
         //Arrange
         var configService = _serviceProvider.GetRequiredService<IConfigService>();
-        var configs = configService.GetConfigs();
+        var configs = configService.SetConfigs();
         
         var pinger = _serviceProvider.GetRequiredService<IEnumerable<IPinger>>().FirstOrDefault(pinger => pinger.GetType() == pingerType);
         var pingResults = new List<PingResult>();
